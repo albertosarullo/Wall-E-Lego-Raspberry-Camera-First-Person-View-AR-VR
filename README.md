@@ -1,4 +1,4 @@
-# Wall-E Lego Raspberry Camera 
+# Wall-E Lego Raspberry 
 
 Give a soul to the Lego Wall-E model using Raspberrypi and some servos.
 
