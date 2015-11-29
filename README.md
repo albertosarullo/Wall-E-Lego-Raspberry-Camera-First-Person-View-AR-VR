@@ -7,7 +7,7 @@ Compared to the original model, i have rebuilt:
 - the neck, beacause i need a complex joint, capable of smooth 3D movement (pitch, roll, yaw)
 - the head, beacuse i add a servo for yaw movement
 
-I buy lego spare parts on Ebay, servos adapter on Mindsensors, servos and electronic parts on chinese deal websites 
+I buy spare bricks on Ebay, servos adapter on Mindsensors, servos and electronic parts on chinese deal websites 
 
 ### Todo
 - ~~build tracks module~~ (8/11/2015 after 5 revision)
@@ -15,4 +15,5 @@ I buy lego spare parts on Ebay, servos adapter on Mindsensors, servos and electr
 - test and tune neck servos with arduino (folder /test)
 - rewrite servo code on raspberry
 - server on raspberry
-- ui for control the movement
+- ui for direct control the movement
+- add sensors
