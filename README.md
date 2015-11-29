@@ -1,3 +1,8 @@
-# Wall-E-Lego-Raspberry-Camera-First-Person-View-AR-VR
+# Wall-E Lego Raspberry Camera 
 
-Give a soul to the Lego Wall-E model using raspberrypi and some servos
+Give a soul to the Lego Wall-E model using Raspberrypi and some servos.
+
+Compared to the beautifull original model, i have rebuilt:
+- the tracks module, beacuse the original track is too small to include servo motor
+- the neck, beacause i need a complex joint, capable of smooth 3D movement (pitch, roll, yaw)
+- the head, beacuse i add a servo for yaw movement
