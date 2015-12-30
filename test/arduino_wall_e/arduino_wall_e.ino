@@ -52,10 +52,10 @@ void loop()
       Serial.println("pitch");  
       String sub = inputString.substring(1);
       pitch = sub.toInt();
-    } else if (inputString.startsWith("p") ) {
-      Serial.println("pitch");  
+    } else if (inputString.startsWith("y") ) {
+      Serial.println("yaw");  
       String sub = inputString.substring(1);
-      pitch = sub.toInt();
+      yaw = sub.toInt();
     } 
     
     // clear the string:
@@ -92,20 +92,23 @@ void loop()
 }
 
 void wallE(int pitch, int roll, int yaw) {
-  
+    pitch = pitch + 90;
+    roll = roll + 90;
+    yaw = yaw + 90;
+   
     // servoRoll.write(rollCenter);
     
     int v;
     v = map(roll, -20, 20, rollLeft, rollRight);
-    servoRoll.write(v);
-
+    
     // pitch depends on roll for construction
-    pitch = pitch + (-roll*0.7);
+    // pitch = pitch + (-roll*0.7);
     
     v = map(pitch, 30, -40, pitchUp, pitchDown);
-    servoPitch.write(v);
     
-    //servoYaw.write(pos);
+    servoRoll.write(roll);
+    servoPitch.write(pitch);
+    servoYaw.write(yaw);
 }
 
 void range(Servo servo, int start, int end) {
