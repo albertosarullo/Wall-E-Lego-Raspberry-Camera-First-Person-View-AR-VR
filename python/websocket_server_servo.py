@@ -21,39 +21,55 @@ yawValue   = 1500
 leftValue  = 1500
 rightValue = 1500
 doorValue  = 1500
+userData   = 0
 
 class TestWebSocket(WebSocket):
 
+  def intToServo(value):
+    return 1500 + int(value) * 10
+
+  def servoToInt(value):
+    return (int(value) - 1500) / 10
+
   def handleMessage(self):
-    global  leftValue, rightValue, pitchValue, rollValue, yawValue, doorValue
+    global  leftValue, rightValue, pitchValue, rollValue, yawValue, doorValue, userData
     print "handleMessage " + str(self.data)
     message = str(self.data).strip()
     command = message[0]
-    if command == "p":
-        value = message[1:]
-        pitchValue = 1500 + (int(value) * 10 * 1)
-        pi.set_servo_pulsewidth(GPIO_PITCH, pitchValue)
-    if command == "r":
-        value = message[1:]
-        rollValue = 1500 + (int(value) * 10 * 1)
-        pi.set_servo_pulsewidth(GPIO_ROLL, rollValue)
-    if command == "y":
-        value = message[1:]
-        yawValue = 1500 + (int(value) * 10 * 1)
-        pi.set_servo_pulsewidth(GPIO_YAW, yawValue)
     if command == "L":
         value = message[1:]
         leftValue = 1500 + (int(value) * 10 * 1)
         pi.set_servo_pulsewidth(GPIO_LEFT, leftValue)
-    if command == "R":
+    elif command == "R":
         value = message[1:]
         rightValue = 1500 + (int(value) * 10 * -1)
         pi.set_servo_pulsewidth(GPIO_RIGHT, rightValue)
-    if command == "d":
+    elif command == "p":
+        value = message[1:]
+        pitchValue = 1500 + (int(value) * 10 * 1)
+        pi.set_servo_pulsewidth(GPIO_PITCH, pitchValue)
+    elif command == "r":
+        value = message[1:]
+        rollValue = 1500 + (int(value) * 10 * 1)
+        pi.set_servo_pulsewidth(GPIO_ROLL, rollValue)
+    elif command == "y":
+        value = message[1:]
+        yawValue = 1500 + (int(value) * 10 * 1)
+        pi.set_servo_pulsewidth(GPIO_YAW, yawValue)
+    elif command == "d":
         value = message[1:]
         doorValue = 1500 + (int(value) * 10 * 1)
         pi.set_servo_pulsewidth(GPIO_DOOR, doorValue)
-    if command == "s":
+    elif command == "u":
+        value = message[1:]
+        userData = value
+    elif command == "w":
+        p = Popen(['iwconfig', 'wlan0'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        cmdOutput, err = p.communicate(b"input data that is passed to subprocess' stdin")
+        rc = p.returncode
+        print(str(cmdOutput))
+        self.sendMessage(str(cmdOutput))
+    elif command == "s":
         print('s')
         leftNormalized  = str((leftValue  - 1500) / 10);
         rightNormalized = str((rightValue - 1500) / 10);
@@ -65,20 +81,10 @@ class TestWebSocket(WebSocket):
         status = 's='
         status += leftNormalized  + ',' + rightNormalized + ','
         status += pitchNormalized + ',' + rollNormalized  + ',' + yawNormalized + ','
-        status += doorNormalized
+        status += doorNormalized + ',' + userData
+
         print(status)
         self.sendMessage(status)
-        
-        '''
-        status = "s=" + str((pitchValue - 1500)/10) + ',' + str(rollValue - 16) + ',' + str(yawValue) + ',' + str(leftValue) + ',' + str(rightValue) + ',' + str(doorValue)
-        print(status)
-        p = Popen(['iwconfig', 'wlan0'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        cmdOutput, err = p.communicate(b"input data that is passed to subprocess' stdin")
-        rc = p.returncode
-        print(str(cmdOutput))
-        self.sendMessage(str(status))
-        self.sendMessage(str(cmdOutput))
-        '''
         
 
   def handleConnected(self):
@@ -94,6 +100,7 @@ def startWebSocketServer():
 
 if __name__ == "__main__":
 
+  print "WALL-E"
   pi = pigpio.pi()
 
   pi.set_mode(GPIO_LEFT, pigpio.OUTPUT);
