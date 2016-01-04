@@ -7,9 +7,9 @@
 	<link rel="stylesheet" href="https://code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
 	<style>
 	body {
+		margin: 0;
 		height: 100%;
 		font-family: arial;
-		margin: 0;
 		background: black;
 		color: #eee;
 	
@@ -98,6 +98,7 @@
 	
 </head>
 <body>
+	<h2>Console</h2>
 	<ul>
 		<li class="group track">
 			<h2>Tracks</h2>
@@ -108,14 +109,17 @@
 						<input type="number" id="left" value="0" min="-100" max="100"/>
 					</span>
 					<div class="slider" data-type="left"></div>
+					<button onclick="stop(['left'])">Reset</button>
 				</li>
 				<li class="slider-group">
 					<span class="slider-label">Right<br/> 
 						<input type="number" id="right" value="0" min="-100" max="100"/>
 					</span>
 					<div class="slider" data-type="right"></div>
+					<button onclick="stop(['right'])">Reset</button>
 				</li>
 			</ul>
+
 		</li>
 		<li class="group head">
 			<h2>Head</h2>
@@ -162,6 +166,7 @@
 </div>
 
 <button onclick="stopAll()">Reset all</button><br/>
+<button onclick="getStatus()">get Status</button><br/>
 
 <script>
 
@@ -191,7 +196,8 @@ function webSocketInit() {
 		if (e.data instanceof Blob) {
 	        var reader = new FileReader()
 	        reader.onload = function() { 
-	            console.log(reader.result)
+	            console.log(reader.result);
+	            updateStatus(reader.result);
 	        }
 	        reader.readAsText(event.data)
 	    }
@@ -210,8 +216,6 @@ function webSocketInit() {
 		} else if (ws.readyState == ws.OPEN) {
 			$('.connection span').removeClass('close');
 			$('.connection span').addClass('open');
-
-
 		}
 	}, 500);
 }
@@ -256,27 +260,47 @@ function uiInit() {
 }
 
 
-function toServo(type, uiValue) {
+function toServo(type, value) {
 	if (ws.readyState == ws.OPEN) {
 		if (type == 'left' ) {
-			ws.send('L' + uiValue);
+			ws.send('L' + value);
 		}
 		if (type == 'right' ) {
-			ws.send('R' + uiValue);
+			ws.send('R' + value);
 		}
 		if (type == 'door' ) {
-			ws.send('d' + uiValue);
+			ws.send('d' + value);
 		}
 		if (type == 'pitch' ) {
-			ws.send('p' + uiValue);
+			ws.send('p' + value);
 		}
 		if (type == 'roll' ) {
-			ws.send('r' + uiValue);
+			ws.send('r' + value);
 		}
 		if (type == 'yaw' ) {
-			uiValue = -uiValue;
-			ws.send('y' + uiValue);
+			value = -value;
+			ws.send('y' + value);
 		}
+	}
+}
+
+function updateStatus(serverMsg) {
+	var cmd = serverMsg.substr(0,1);
+	if (cmd == 's') {
+		var statusValues = serverMsg.substr(2).split(',');
+		var status = {
+			left:  parseInt(statusValues[0], 10),
+			right: parseInt(statusValues[1], 10) * -1,
+			pitch: parseInt(statusValues[2], 10),
+			roll:  parseInt(statusValues[3], 10),
+			yaw:   parseInt(statusValues[4], 10),
+			door:  parseInt(statusValues[5], 10)
+		};
+			
+		var types = ['left', 'right', 'pitch', 'roll', 'yaw', 'door'];
+		$.each(types, function(i, type) {
+			$('.slider[data-type=' + type + ']').slider('value', status[type]);
+		});
 	}
 }
 
@@ -286,23 +310,26 @@ function ping() {
 
 }
 
+function stop(types) {
+	$.each(types, function(i, type) {
+		var value = parseInt($('#' + type ).attr('value'), 10)
+		$('.slider[data-type=' + type + ']').slider('value', value);
+		// toServo('left', value );
+	});
+}
+
 function stopAll() {
 	console.log('stopAll')
 	var types = ['left', 'right', 'pitch', 'roll', 'yaw', 'door'];
 	$.each(types, function(i, type) {
 		var value = parseInt($('#' + type ).attr('value'), 10)
 		$('.slider[data-type=' + type + ']').slider('value', value);
-		toServo('left', value );
-
+		// toServo('left', value );
 	});
-	/*
-	toServo('left',  parseInt($('#left' ).attr('value'), 10));
-	toServo('right', parseInt($('#right').attr('value'), 10));
-	toServo('pitch', parseInt($('#pitch').attr('value'), 10));
-	toServo('roll',  parseInt($('#roll' ).attr('value'), 10));
-	toServo('yaw',   parseInt($('#yaw'  ).attr('value'), 10));
-	toServo('door',  parseInt($('#door' ).attr('value'), 10));
-	*/
+}
+
+function getStatus() {
+	ws.send('s');
 }
 
 $(function() {
