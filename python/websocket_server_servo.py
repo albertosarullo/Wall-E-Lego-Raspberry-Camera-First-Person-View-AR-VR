@@ -81,7 +81,8 @@ class TestWebSocket(WebSocket):
         status = 's='
         status += leftNormalized  + ',' + rightNormalized + ','
         status += pitchNormalized + ',' + rollNormalized  + ',' + yawNormalized + ','
-        status += doorNormalized + ',' + userData
+        status += doorNormalized + ','
+        status += str(userData)
 
         print(status)
         self.sendMessage(status)
