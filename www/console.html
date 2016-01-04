@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Tracks Control</title>
+	<meta name="viewport" content="width=320, initial-scale=1">
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
+	<style>
+	body {
+		height: 100%;
+		font-family: arial;
+		margin: 0;
+		background: black;
+		color: #eee;
+	
+	}
+	button {
+		font-size: 20px
+	}
+	ul {
+		padding: 0;
+		margin: 0;
+	}
+	li.group {
+		float: left;
+		list-style: none;
+		margin: 10px;
+		border-right: solid 1px gray;
+		height: 300px
+	}
+	li.group.head {
+		width: 200px;
+	}
+	h2 {
+		margin: 10px 0;
+		font-size: 20px;
+	}
+	.slider-group {
+		float: left;
+		width: 70px;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.slider-group.roll, .slider-group.yaw {
+		width: 120px;
+	}
+	.slider {
+		float: left;
+		width: 3px;
+		height: 80px;
+		margin: 15px;
+		margin-left: 20px;
+	}
+	.slider[data-type=roll], .slider[data-type=yaw] {
+		width: 80px;
+		height: 3px;
+	}
+	.ui-slider-vertical .ui-slider-handle  {
+		left: -0.55em;
+	}
+	.slider-label {
+		display: block;
+	}
+	input[type=number] {
+		width: 40px;
+		background: #444;
+		color: white;
+		border: solid 1px #888;
+	}
+	button {
+		font-size: 12px;
+	}
+	.connection {
+		float: left;
+		margin: 10px;
+
+	}
+	.connection span {
+		display: inline-block;
+		width: 20px;
+		height: 20px;
+		margin-bottom: -5px;
+		border-radius: 10px;
+	}
+	.connection span.close {
+		background: red;
+		
+	}
+	.connection span.open {
+		background: #0f0;
+		
+	}
+
+	</style>
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+	
+</head>
+<body>
+	<ul>
+		<li class="group track">
+			<h2>Tracks</h2>
+			<ul>
+				<li class="slider-group">
+					<span class="slider-label">
+						Left<br/> 
+						<input type="number" id="left" value="0" min="-100" max="100"/>
+					</span>
+					<div class="slider" data-type="left"></div>
+				</li>
+				<li class="slider-group">
+					<span class="slider-label">Right<br/> 
+						<input type="number" id="right" value="0" min="-100" max="100"/>
+					</span>
+					<div class="slider" data-type="right"></div>
+				</li>
+			</ul>
+		</li>
+		<li class="group head">
+			<h2>Head</h2>
+
+			<ul>
+				<li class="slider-group">
+					<span class="slider-label">Pitch<br/> 
+						<input type="number" id="pitch" value="0" min="-30" max="30"/>
+					</span>
+					<div class="slider" data-type="pitch"></div>
+				</li>
+				<li class="slider-group roll">
+					<span class="slider-label">Roll<br/> 
+						<input type="number" id="roll" value="0" min="-30" max="30"/>
+					</span>
+					<div class="slider" data-type="roll"></div>
+				</li>
+				<li class="slider-group yaw">
+					<span class="slider-label">Yaw<br/> 
+						<input type="number" id="yaw" value="0" min="-30" max="30"/>
+					</span>
+					<div class="slider" data-type="yaw"></div>
+				</li>
+			</ul>
+		</li>
+		<li class="group door">
+			<h2>Door</h2>
+			<ul>
+			<li class="slider-group">
+				<span class="slider-label">Door<br/> 
+					<input type="number" id="door" value="0" min="-80" max="88"/>
+				</span>
+				<div class="slider" data-type="door"></div>
+				<button onclick="ws.send('d-80')">Open</button><br/>
+				<button onclick="ws.send('d88')">Close</button>
+			</li>
+		</ul>
+	</li>
+</ul>
+
+
+<div class="connection">
+	Connection: <span class="close"></span>
+</div>
+
+<button onclick="stopAll()">Reset all</button><br/>
+
+<script>
+
+var ws;
+var address = 'localhost';
+	address = '192.168.3.148';
+var port = 9000;
+
+var pingTime, pongTime;
+
+
+function webSocketInit() {
+	ws = new WebSocket("ws://" + address + ":" + port + "/client");
+	ws.onerror = function() {
+		console.log('ws onerror');
+	}
+	ws.onopen = function() {
+	    console.log('ws open');
+	};
+
+	ws.onmessage = function (e) {
+		console.log('onmessage: ' + e.data);
+		if (e.data == 'pong') {
+			pongTime = new Date().getTime();
+			console.log(pongTime - pingTime);
+		}
+		if (e.data instanceof Blob) {
+	        var reader = new FileReader()
+	        reader.onload = function() { 
+	            console.log(reader.result)
+	        }
+	        reader.readAsText(event.data)
+	    }
+	};
+	ws.onclose = function() {
+		console.log('close')
+	};
+	window.onbeforeunload = function() {
+		ws.close();
+	};
+	setInterval(function() {
+		if (ws.readyState == ws.CLOSE) {
+			$('.connection span').removeClass('open');
+			$('.connection span').addClass('close');
+
+		} else if (ws.readyState == ws.OPEN) {
+			$('.connection span').removeClass('close');
+			$('.connection span').addClass('open');
+
+
+		}
+	}, 500);
+}
+
+
+
+
+function uiInit() {
+	
+	$('.slider').each(function(i, obj) { 
+		var type  = $(obj).data('type');
+		var $input = $('#' + type);
+		var min   = parseInt($input.attr('min'),   10);
+		var max   = parseInt($input.attr('max'),   10);
+		var value = parseInt($input.attr('value'), 10);
+		console.log(type, min, max, value);
+		var orientation = 'vertical';
+		if (type == 'roll' || type == 'yaw') {
+			orientation = 'horizontal';
+		}
+		$(obj).slider({
+			min: min,
+			max: max,
+			value: value,
+			orientation: orientation,
+			change: function(e, ui) {
+				$('#' + type).val(ui.value);
+				toServo(type, ui.value);
+			},
+			slide: function(e, ui) {
+				$('#' + type).val(ui.value);
+				toServo(type, ui.value);
+			}
+		});
+	});
+		
+	$('input[type=number]').on('change', function(e) {		
+		var value = $(this).val();
+		var type = $(this).attr('id');
+		$('.slider[data-type=' + type + ']').slider('value', value);
+	});
+}
+
+
+function toServo(type, uiValue) {
+	if (ws.readyState == ws.OPEN) {
+		if (type == 'left' ) {
+			ws.send('L' + uiValue);
+		}
+		if (type == 'right' ) {
+			ws.send('R' + uiValue);
+		}
+		if (type == 'door' ) {
+			ws.send('d' + uiValue);
+		}
+		if (type == 'pitch' ) {
+			ws.send('p' + uiValue);
+		}
+		if (type == 'roll' ) {
+			ws.send('r' + uiValue);
+		}
+		if (type == 'yaw' ) {
+			uiValue = -uiValue;
+			ws.send('y' + uiValue);
+		}
+	}
+}
+
+function ping() {
+	ws.send('ping');
+	pingTime = new Date().getTime();
+
+}
+
+function stopAll() {
+	console.log('stopAll')
+	var types = ['left', 'right', 'pitch', 'roll', 'yaw', 'door'];
+	$.each(types, function(i, type) {
+		var value = parseInt($('#' + type ).attr('value'), 10)
+		$('.slider[data-type=' + type + ']').slider('value', value);
+		toServo('left', value );
+
+	});
+	/*
+	toServo('left',  parseInt($('#left' ).attr('value'), 10));
+	toServo('right', parseInt($('#right').attr('value'), 10));
+	toServo('pitch', parseInt($('#pitch').attr('value'), 10));
+	toServo('roll',  parseInt($('#roll' ).attr('value'), 10));
+	toServo('yaw',   parseInt($('#yaw'  ).attr('value'), 10));
+	toServo('door',  parseInt($('#door' ).attr('value'), 10));
+	*/
+}
+
+$(function() {
+	uiInit();
+	webSocketInit();
+});
+
+</script>
+
+</body>
+</html>
