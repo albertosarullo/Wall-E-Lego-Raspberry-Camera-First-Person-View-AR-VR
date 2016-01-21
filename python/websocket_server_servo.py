@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# sudo pip install websocket-client
 from SimpleWebSocketServer import WebSocket, SimpleWebSocketServer
 from subprocess import call, Popen, PIPE
 import thread, threading
@@ -8,12 +7,13 @@ import pigpio
 
 websocket_port = 9000
 
-GPIO_LEFT  = 20
-GPIO_RIGHT = 21
-GPIO_PITCH = 19
+GPIO_LEFT  = 26
+GPIO_RIGHT = 19
+GPIO_PITCH = 06
 GPIO_ROLL  = 13
-GPIO_YAW   = 26
-GPIO_DOOR  = 16
+GPIO_YAW   = 05
+GPIO_DOOR  = 22
+GPIO_EYES  = 27
 
 pitchValue = 1500
 rollValue  = 1500
@@ -21,6 +21,7 @@ yawValue   = 1500
 leftValue  = 1500
 rightValue = 1500
 doorValue  = 1500
+eyesValue  = 1500
 userData   = 0
 
 class TestWebSocket(WebSocket):
@@ -32,7 +33,7 @@ class TestWebSocket(WebSocket):
     return (int(value) - 1500) / 10
 
   def handleMessage(self):
-    global  leftValue, rightValue, pitchValue, rollValue, yawValue, doorValue, userData
+    global  leftValue, rightValue, pitchValue, rollValue, yawValue, doorValue, eyesValue, userData
     print "handleMessage " + str(self.data)
     message = str(self.data).strip()
     command = message[0]
@@ -60,6 +61,10 @@ class TestWebSocket(WebSocket):
         value = message[1:]
         doorValue = 1500 + (int(value) * 10 * 1)
         pi.set_servo_pulsewidth(GPIO_DOOR, doorValue)
+    elif command == "e":
+        value = message[1:]
+        eyesValue = 1500 + (int(value) * 10 * 1)
+        pi.set_servo_pulsewidth(GPIO_EYES, eyesValue)
     elif command == "u":
         value = message[1:]
         userData = value
@@ -77,11 +82,12 @@ class TestWebSocket(WebSocket):
         rollNormalized  = str((rollValue  - 1500) / 10);
         yawNormalized   = str((yawValue   - 1500) / 10);
         doorNormalized  = str((doorValue  - 1500) / 10);
+        eyesNormalized  = str((eyesValue  - 1500) / 10);
 
         status = 's='
         status += leftNormalized  + ',' + rightNormalized + ','
         status += pitchNormalized + ',' + rollNormalized  + ',' + yawNormalized + ','
-        status += doorNormalized + ','
+        status += doorNormalized + ',' + eyesValue
         status += str(userData)
 
         print(status)
