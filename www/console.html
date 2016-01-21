@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>Tracks Control</title>
+	<title>Console</title>
 	<meta name="viewport" content="width=320, initial-scale=1">
-	<link rel="stylesheet" href="https://code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
+	<link rel="stylesheet" href="css/libs/jquery-ui.css">
 	<style>
 	body {
 		margin: 0;
@@ -59,6 +59,10 @@
 	.ui-slider-vertical .ui-slider-handle  {
 		left: -0.55em;
 	}
+	.ui-slider-horizontal .ui-slider-handle {
+		top: -.5em;
+	}
+
 	.slider-label {
 		display: block;
 	}
@@ -93,8 +97,8 @@
 	}
 
 	</style>
-	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-	<script src="https://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+	<script src="js/libs/jquery-2.1.4.min.js"></script>
+	<script src="js/libs/jquery-ui.min.js"></script>
 	
 </head>
 <body>
@@ -143,6 +147,8 @@
 					</span>
 					<div class="slider" data-type="yaw"></div>
 				</li>
+				
+
 			</ul>
 		</li>
 		<li class="group door">
@@ -157,6 +163,18 @@
 				<button onclick="ws.send('d88')">Close</button>
 			</li>
 		</ul>
+		<li class="group door">
+			<h2>Emotion</h2>
+			<ul>
+				<li class="slider-group">
+					<span class="slider-label">Sadness<br/> 
+						<input type="number" id="eyes" value="0" min="0" max="45"/>
+					</span>
+					<div class="slider" data-type="eyes"></div>
+				</li>
+		</ul>
+
+
 	</li>
 </ul>
 
@@ -171,8 +189,7 @@
 <script>
 
 var ws;
-var address = 'localhost';
-	address = '192.168.3.148';
+var address = location.host || '192.168.43.6';
 var port = 9000;
 
 var pingTime, pongTime;
@@ -182,9 +199,11 @@ function webSocketInit() {
 	ws = new WebSocket("ws://" + address + ":" + port + "/client");
 	ws.onerror = function() {
 		console.log('ws onerror');
-	}
+	};
+
 	ws.onopen = function() {
 	    console.log('ws open');
+		socketStatusOpen
 	};
 
 	ws.onmessage = function (e) {
@@ -202,26 +221,34 @@ function webSocketInit() {
 	        reader.readAsText(event.data)
 	    }
 	};
+
 	ws.onclose = function() {
-		console.log('close')
+		console.log('close');
+		socketStatusClose();
 	};
+
 	window.onbeforeunload = function() {
 		ws.close();
 	};
+
 	setInterval(function() {
 		if (ws.readyState == ws.CLOSE) {
-			$('.connection span').removeClass('open');
-			$('.connection span').addClass('close');
-
+			socketStatusClose();
 		} else if (ws.readyState == ws.OPEN) {
-			$('.connection span').removeClass('close');
-			$('.connection span').addClass('open');
+			socketStatusOpen();
 		}
 	}, 500);
 }
 
+function socketStatusClose() {
+	$('.connection span').removeClass('open');
+	$('.connection span').addClass('close');
+}
 
-
+function socketStatusOpen() {
+	$('.connection span').removeClass('close');
+	$('.connection span').addClass('open');
+}
 
 function uiInit() {
 	
@@ -264,23 +291,21 @@ function toServo(type, value) {
 	if (ws.readyState == ws.OPEN) {
 		if (type == 'left' ) {
 			ws.send('L' + value);
-		}
-		if (type == 'right' ) {
+		} else if (type == 'right' ) {
 			ws.send('R' + value);
-		}
-		if (type == 'door' ) {
+		} else if (type == 'door' ) {
 			ws.send('d' + value);
-		}
-		if (type == 'pitch' ) {
+		} else if (type == 'pitch' ) {
 			ws.send('p' + value);
-		}
-		if (type == 'roll' ) {
+		} else if (type == 'roll' ) {
 			ws.send('r' + value);
-		}
-		if (type == 'yaw' ) {
+		} else if (type == 'yaw' ) {
 			value = -value;
 			ws.send('y' + value);
+		} else if (type == 'eyes' ) {
+			ws.send('e' + value);
 		}
+		
 	}
 }
 
@@ -307,7 +332,6 @@ function updateStatus(serverMsg) {
 function ping() {
 	ws.send('ping');
 	pingTime = new Date().getTime();
-
 }
 
 function stop(types) {
