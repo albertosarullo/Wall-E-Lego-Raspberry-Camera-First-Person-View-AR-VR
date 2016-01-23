@@ -1,4 +1,5 @@
 import threading
+import time
 import serial
 from SimpleWebSocketServer import WebSocket, SimpleWebSocketServer
 
@@ -8,8 +9,8 @@ websocket_port = 9000
 
 class TestWebSocket(WebSocket):
   def handleMessage(self):
-    print "handleMessage"
-    arduino.write(str(self.data) + '\n')
+    print "handleMessage " + str(self.data)
+    arduino.write(str(self.data))
 
   def handleConnected(self):
     print self.address, 'connected'
